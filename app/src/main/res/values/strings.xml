@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">MusicPlayer</string>
+    <string name="title_song">Title Song</string>
+    <string name="artist_name">Artist Name</string>
+    <string name="album_name">Album Name</string>
+    <string name="icona">icona</string>
+    <string name="autoparlante">autoparlante</string>
+    <string name="song_title">Song Title</string>
+    <string name="imgclick">imgClick</string>
+    <string name="play">play</string>
+</resources>
