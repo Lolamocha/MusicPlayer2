@@ -124,7 +124,7 @@ public class SongActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        switch (playMusic()){//e qui ???
+        switch (()){//e qui ???
 
             case  R.id.suona:
                 if(mp==null){
