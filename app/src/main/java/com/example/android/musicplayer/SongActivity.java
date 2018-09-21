@@ -125,7 +125,7 @@ public class SongActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         switch (()){//e qui ???
-
+//// cosa ci faccio qui?
             case  R.id.suona:
                 if(mp==null){
                mp = MediaPlayer.create(SongActivity.this,Song.getSonoro());
