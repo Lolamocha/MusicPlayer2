@@ -1,26 +1,25 @@
 package com.example.android.musicplayer;
 
 
-import android.annotation.SuppressLint;
+
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import java.util.List;
 
-import static android.media.MediaPlayer.*;
-import static com.example.android.musicplayer.Song.getSonoro;
 
-public class SongActivity extends AppCompatActivity implements View.OnClickListener {
-    ImageButton playBtn, pauseBtn, stopBtn;
+public class SongActivity extends AppCompatActivity  {
+
+    ImageButton playBtn;
     SeekBar positionBar;
     SeekBar volumeBar;
     TextView elapsedTimeLabel;
@@ -31,59 +30,16 @@ public class SongActivity extends AppCompatActivity implements View.OnClickListe
     TextView txtArtist;
     ImageView imgThumbnail;
 
-    int pauseCurrentPosition;
+    int sonoro = 0;
+    int totalTime;
 
     public static MediaPlayer mp;
-    /**
-     * This listener gets triggered when the {@link MediaPlayer} has completed
-     * playing the audio file.
-     */
-   // private MediaPlayer.OnCompletionListener mCompletionListener = new MediaPlayer.OnCompletionListener() {
-       // @Override
-       // public void onCompletion(MediaPlayer mediaPlayer) {
-            // Now that the sound file has finished playing, release the media player resources.
-           // releaseMediaPlayer();
-       // }
-   // };
-
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        // When the activity is stopped, release the media player resources because we won't
-        // be playing any more sounds.
-        releaseMediaPlayer();
-    }
-
-    /**
-     * Clean up the media player by releasing its resources.
-     */
-    private void releaseMediaPlayer() {
-        // If the media player is not null, then it may be currently playing a sound.
-        if (mp != null) {
-            // Regardless of the current state of the media player, release its resources
-            // because we no longer need it.
-            mp.release();
-
-            // Set the media player back to null. For our code, we've decided that
-            // setting the media player to null is an easy way to tell that the media player
-            // is not configured to play an audio file at the moment.
-            mp = null;
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-    }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_song);
-
+        Log.v("SongActivity","onCreate");
 
         //keep data
         Intent intent = getIntent();
@@ -91,16 +47,12 @@ public class SongActivity extends AppCompatActivity implements View.OnClickListe
         String AlbumName = intent.getExtras().getString("AlbumName");
         String TitleSong = intent.getExtras().getString("TitleSong");
         int Thumbnail = intent.getExtras().getInt("Thumbnail");
-
-        ////che ci metto qui ?
-        final int Sonoro = intent.getExtras().getInt("Sonoro");
-
+        sonoro = intent.getExtras().getInt("Sonoro");
 
         txtSong = findViewById(R.id.txt_title);
         txtAlbum = findViewById(R.id.txt_album);
         txtArtist = findViewById(R.id.txt_artist);
         imgThumbnail = findViewById(R.id.img_thumbnail);
-
 
         //setting value
         txtSong.setText(TitleSong);
@@ -110,39 +62,139 @@ public class SongActivity extends AppCompatActivity implements View.OnClickListe
         imgThumbnail.setImageResource(Thumbnail);
 
         playBtn = findViewById(R.id.suona);
-        pauseBtn = findViewById(R.id.pause);
-        stopBtn = findViewById(R.id.stop);
-
-        playBtn.setOnClickListener(this);
-        pauseBtn.setOnClickListener(this);
-        stopBtn.setOnClickListener(this);
 
 
+        elapsedTimeLabel = findViewById(R.id.elapsedTimeLabel);
+        remainingTimeLabel = findViewById(R.id.elapsedTimeLabel);
 
 
+        mp = MediaPlayer.create(getApplicationContext(),sonoro);
+        mp.setLooping(true);
+        mp.seekTo(0);
+        mp.setVolume(0.5f,0.5f);
+        totalTime = mp.getDuration();
+
+
+
+        positionBar =  findViewById(R.id.positionBar);
+        positionBar.setMax(totalTime);
+        positionBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(fromUser){
+                    mp.seekTo(progress);
+                    positionBar.setProgress(progress);}
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        volumeBar =  findViewById(R.id.volumeBar);
+        volumeBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                float volumeNum = progress /100f;
+                mp.setVolume(volumeNum,volumeNum);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        // Thread (update positionBar e timeLabel
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(mp != null){
+                 try{
+                     Message msg = new Message();
+                     msg.what = mp.getCurrentPosition();
+                     handler.sendMessage(msg);
+                     Thread.sleep(1000);
+                 }catch (InterruptedException e){}
+                }
+            }
+        }).start();
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (()){//e qui ???
-//// cosa ci faccio qui?hhhgdkhgdhghg
-            case  R.id.suona:
-                if(mp==null){
-               mp = MediaPlayer.create(SongActivity.this,Song.getSonoro());
 
-                mp.start();}
-                break;
-            case R.id.pause:
-                break;
-            case R.id.stop:
+
+    //private
+     Handler handler = new MyVeryOwnHandler();
+
+
+    public String createTimeLabel(int time){
+        String timeLabel = "";
+        int min = time / 1000 / 60 ;
+        int sec = time /1000 % 60 ;
+
+        timeLabel =  min + ":";
+        if(sec <10) timeLabel += "0";
+        timeLabel += sec;
+
+        return timeLabel;
+    }
+
+    public void playBtnClick(View view) {
+        if (!mp.isPlaying()) {
+            mp.start();
+            playBtn.setBackgroundResource(R.drawable.pause);
+
+        } else if (mp.isPlaying()) {
+            mp.pause();
+            playBtn.setBackgroundResource(R.drawable.stop);
+
+        }else{
+            if(mp.isPlaying())
                 mp.stop();
-                break;
-        }
 
+            mp.reset();
+            if(!mp.isPlaying())
+            playBtn.setBackgroundResource(R.drawable.play);
+        }
+    }
+
+      class MyVeryOwnHandler extends Handler {
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            int currentPosition = msg.what;
+
+            //Update PositionBar
+            positionBar.setProgress(currentPosition);
+
+            //Update labels.
+            String elapsedTime = createTimeLabel(currentPosition);
+            elapsedTimeLabel.setText(elapsedTime);
+
+            String remainingTime = createTimeLabel(totalTime - currentPosition);
+            remainingTimeLabel.setText("-" + remainingTime);
+        }
+    }
     }
 
 
-}
+
+
+
+
+
 
 
 
