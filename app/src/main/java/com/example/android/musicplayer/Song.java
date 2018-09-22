@@ -7,7 +7,7 @@ public class Song {
     private String ArtistName;
     private String AlbumName;
     private int Thumbnail;
-    private static int Sonoro;
+    private  int Sonoro;
 
     public Song(String titleSong, String artistName, String albumName, int thumbnail,int sonoro) {
         TitleSong = titleSong;
@@ -21,5 +21,5 @@ public class Song {
     String getArtistName() {return ArtistName;}
     String getAlbumName() {return AlbumName;}
     int getThumbnail() {return Thumbnail;}
-    static int getSonoro(){return Sonoro;}
+     int getSonoro(){return Sonoro;}
 }
